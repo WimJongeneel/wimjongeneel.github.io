@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Functional Programming in TypeScript</title>
+<link href="https://fonts.googleapis.com/css?family=Crimson+Pro|Crimson+Text|Roboto+Mono&display=swap" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="normalize.css">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+  <div class="page">
+    <aside>
+      <h1>Functional Programming in TypeScript</h1>
+      <div class="contents">
+
+        <h3>4. Monoids</h3>
+
+        <div>
+          <ul>
+            <li><a>4.1 What is a monoid?</a></li>
+            <li><a>4.2 Identity law</a></li>
+            <li><a>4.3 Associativity law</a></li>
+            <li><a>4.4 Functions as monoids</a></li>
+            <li><a>4.5 Booleans as monoids</a></li>
+            <li><a>4.6 Monoids and reduce</a></li>
+            <li><a>4.7 Types as monoids</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div>
+          <a>previous</a>
+        </div>
+        <div>
+          <a>next</a>
+        </div>
+      </div>
+
+      <div class="contact">
+        <p>Written by Wim Jongeneel</p>
+
+        <p><a>contact me</a></p>
+      </div>
+    </aside>
+
+    <main>
+
+
+
+      <h1>4. Monoids</h1>
+
+      <h2>4.1 What is a monoid?</h2>
+
+      <p>
+        A monoid is based around a very simple idea: you can combine things together to something bigger. For example, I
+        can
+        combine the numbers 3 and 5 together in a bigger number: 8. This combining of small things into bigger things is
+        a
+        concept that we will see recurring in programming.
+      </p>
+
+      <p>But a monoid is not just something of which I can combine things together to other things. Of course this is
+        still
+        mathematics and there has to be some formal definition. Well, here it goes: a monoid is a set which has a
+        operation
+        (function) that combines two items from that set into another item of that set. There is also a neutral item
+        that when
+        used with the function will result in the other item that was provided. The operator of the monoid is called
+        join and is
+        a binary operator. The neutral item is called unit. To make this more clear we can look at some examples:
+      </p>
+
+      <p>
+
+        The definition of a monoid can be given with two mathematical laws that describe the conditions for something to
+        be
+        called a monoid: the identity law and the associativity law.
+      </p>
+      <p>
+        One final note before we continue: I’m going to be a bit loose with the definition of the equality operator in
+        this
+        chapter. Equality over here is the deep-equality you might have seen before in some JavaScript libraries.
+        Basically it
+        boils down to that we don’t care about references. So two empty arrays are here equal, even when they would
+        return false
+        when compared in TypeScript. Another way of saying this is that we look to value-equality or
+        structural-equality. So:
+      </p>
+      <pre>
+        [ ] == [ ] // true
+        [ 1, 2 ] == [ 1, 2 ] // true
+        [ 1 ] == [ 2 ] // false
+        { foo: 1 } == { foo: 1 } // true
+        { foo: 1 } == { bar: true } // false
+      </pre>
+
+      <h2>4.2 Identity law</h2>
+      <p>
+        The identity law describes how the unit (or neutral) item has to behave. When the unit is used with join in
+        combination
+        with any item X from the set, the result has to be X. So for numbers and addititoin unit is zero because X + 0 =
+        X. And
+        for strings it is the empty string because: X + “” = X. We can write this definition down as:
+      </p>
+      <pre>
+      join(x, unit) == join(unit, X) == X
+      </pre>
+      <p>
+        And we can define our join functions and identities in TypeScript quit easily for a wide variety of monoids, as
+        is shown
+        below. Further down this chapter we will look at some more unique and complex monoids and there I will show you
+        more
+        examples.
+      </p>
+      <pre>
+      let join = (a, b) => a + b
+      let id = 0
+      let x = join(3, id) // 3
+      
+      let join = (a, b) => a.concat(b)
+      let id = []
+      let x = join([ 1, 2, 3 ], []) // [ 1, 2, 3 ]
+      </pre>
+
+      <h2>4.3 Associativity law</h2>
+      <p>
+        The associativity law describes (partially) how the join operator has to behave . If I use this operator
+        multiple times
+        in an expression, the order in which I execute the joins shouldn’t matter. The order of the items in the
+        expression
+        could matter, like it does for strings and arrays. This is probably easier if I just write the law down:
+      </p>
+      <pre>
+      join(x, join(y, z)) == join(join(x, y), z)
+      </pre>
+      <p>
+        No matter which join I resolve first, the result has to be the same. This can also be shown with some TypeScript
+        examples:
+      </p>
+      <pre>
+      let join = (a, b) => a + b
+      let id = 0
+      let x = join(1, join(2, 3)) // 6
+      let y = join(join(1, 2), 3) // also 6
+      
+      let join = (a, b) => a.concat(b)
+      let id = []
+      let x = join([ 1 ], join([ 2 ], [ 3 ]) // [ 1, 2, 3 ]
+      let x = join(join([ 1 ], [ 2 ]), [ 3 ]) // also [ 1, 2, 3 ]
+      </pre>
+
+      <h2>4.4 Functions as monoids</h2>
+      <p>
+        There are many monoids but there is a very important but less obvious one I want to talk about: functions. A
+        function is
+        also a monoid. They do have a binary operator that takes two functions and makes them into one function:
+        composition.
+        They also have an identity: the identity function x => x (hence the name). For a function to be a monoids we do
+        need a
+        set of functions that do all have the same return type as argument type or we are not able to compose them at
+        will.
+      </p>
+      <pre>
+      let id = x => x
+      let join = (f, g) => x => g(f(x))
+      </pre>
+      <p>
+        The identity function makes no mutation to whatever you feed it, so this makes the identity law easy to
+        understand for
+        this one. The function we compose id with just does its thing and then the identity function does nothing with
+        the
+        result, resulting in whatever the first function returned.
+      </p>
+      <pre>
+      join(id)(x => x + x) == x => x + x
+      </pre>
+      <p>
+        The associativity law can be shown by combining three function together where we vary which two functions we
+        compose
+        first. No matter which in which order we compose the functions, we will always end up with the equivalent of x
+        =>
+        h(g(f(x))).
+      </p>
+      <pre>
+      join(f, join(g)(h)) == join(join(f)(g))(h)
+      </pre>
+      <p>
+        Functions and composition being a good example of a curtain abstraction or concept is something that will coming
+        back
+        and shows you how powerful functions and function composition exactly are.
+      </p>
+
+      <h2>4.5 Booleans as monoids</h2>
+
+      <p>
+        Booleans are also a type for which we have multiple binary operators: and and or. For both of them we can find
+        an
+        identity value and define a monoid. Because there are only two booleans it is very easy to just check all
+        possible
+        cases
+        we can create with the binary operators. For and the identity value is true:
+      </p>
+      <pre>
+      let id = true
+      id && true == true && id == true
+      id && false == false && id == false
+
+      b1 && (b2 && b2) == (b1 && b2) && b3
+      </pre>
+      <p>
+        The associativity law also holds up for and, no matter in which order you combine the operator and three
+        booleans,
+        you
+        only get true if all of them are true and you will get false if only one of them is false. The order doesn’t
+        matter. For
+        or the identity value is false:
+      </p>
+      <pre>
+      let id = false
+      id || false == false || id == false
+      id || true == true || id == true
+
+      b1 || (b2 || b3) == (b1 || b2) || b3
+      </pre>
+      <p>
+        And associativity follows the same logic as for or as it did for and: if just one of your three booleans is
+        true,
+        you
+        get true and if all are false you get false. Order also doesn’t matter here.
+      </p>
+      <p>
+        Those monoids have more consequences then you would imagine at first. One example is the short-circuiting of
+        JavaScript.
+        If an && get evaluated and the first argument evaluates to false, it will directly return false without
+        bothering
+        to
+        look to right expression. This works because if the first item is not the identity, it will affect the outcome
+        and
+        always be false. The same is true for the ||. If the first expression is not the identity it will affect the
+        outcome to
+        always be true.
+      </p>
+      <p>
+        Another example is the every and some methods of arrays. some on an array uses the or operator on all the
+        results
+        of the
+        provided function to decide if it will return true of false. But if there are no items you will get false
+        because
+        that
+        is the identity value of the or operator. On the other hand, every on an empty array returns true because that
+        is
+        the
+        identity value of and.
+      </p>
+      <pre>
+      [].every(x => true) // true
+      [].every(x => false) // true
+      [].some(x => true) // false
+      [].some(x => false) // false
+      </pre>
+
+      <h2>4.6 Monoids and reduce</h2>
+      <p>
+        A very practical ability of monoids is that they can be used with the reduce method on arrays. If you have an
+        array of
+        monoids, you can use the join function to reduce them to one with the identity value as the initial value:
+      </p>
+      <pre>
+      let join = (a, b) => a + b
+      let id = 0
+      [1,2,3].reduce(join, id)
+
+      let join = (f, g) => x => g(f(x))
+      let id = x => x
+      [x => x + x, x => x * x].reduce(join, id)
+      </pre>
+      <p>
+        In the previous chapter we saw how monoids have influenced the behaviour of some and every. To illustrate this
+        better we
+        can define those functions with the help of reduce and our monoids, in similar fashion to how we just used
+        reduce
+        with
+        functions and numbers:
+      </p>
+      <pre>
+      let and = (a, b) => a && b
+      let id = true
+      let every = (a: boolean[]) => a.reduce(and, id)
+
+      let or = (a, b) => a || b
+      let id = false
+      let some = (a: boolean[]) => a.reduce(or, id)
+      </pre>
+
+      <h2>4.7 Types as monoids</h2>
+      <p>
+        Not just values of some types are monoids, types themself are also monoids. In TypeScript we do have multiple
+        binary
+        operators for types which we can combine with their neutral type to create type monoids. You will see that those
+        form a
+        very solid foundation for type algebra.
+      </p>
+      <p>
+        The most well-known type operator is the |. This operator combines two types with an ‘or’. This type is also
+        called the
+        sum type because the amount of possible values of the resulting type is the amount of possible values of the
+        first
+        type
+        plus the amount of possible types of the other second type. To define a monoid with this operator we need an
+        identity
+        that has zero possible values (N possible values + zero possible values = N possible values). Luckily we have
+        such
+        an
+        type: never.
+      </p>
+      <pre>
+        type join&#x26;#x3C;a, b&#x3E; = a | b
+        type id = never
+        
+        type x = join&#x26;#x3C;number, never&#x3E; // just number, try it in vscode
+      </pre>
+      <p>
+        We can also verify the associativity law of this operator. Because of the syntax rule we can only define two
+        ways of
+        combining tree type tother (there are no parentheses we can use to create the third one we did have with
+        other
+        monoids). All of them result into number|string|boolean.
+      </p>
+      <pre>
+          type u = join&#x3C;number, join&#x3C;string, boolean&#x3E;&#x3E;
+          type v = join&#x3C;join&#x3C;number, string&#x3E;, boolean&#x3E;
+      </pre>
+      <p>
+        Another monoid we can define with types is the product type. A product type takes two types and gives you
+        a tuple with those two types. This means that we can combine every possible value from the first type with
+        all the possible values from the second type. As a result of this the combined amount of possible values is
+        the
+        amount of possible values from the first type times the amount of possible values of the second type. To
+        make a
+        monoid out of this join operator we need a type that has only one possible value that we can combine with
+        all
+        possible values of a given type. For this I will use an empty object (one could also use null, but depending
+        on
+        your tsconfig null is part of all types and that is not what we want). Other languages have a special
+        builtin
+        type for this called Unit.
+      </p>
+      <pre>
+        type Unit = {}
+
+        type join&#x3C;a, b&#x3E; = [a, b]
+        type id = Unit
+
+        type x = join&#x3C;boolean, {}&#x3E; // [true, {}] | [false, {}]
+      </pre>
+      <p>
+        The associativity law is also valid for this operator. Every possible order to compose our joins
+        together
+        result in a type that has a number, string and a boolean in a nested tuple. The specific nesting does
+        differ, but that is fine. We do still store the same information with the same restrictions on the
+        specific
+        items.
+      </p>
+      <pre>
+        type u = join&#x3C;number, join&#x3C;string, boolean&#x3E;&#x3E;
+        type v = join&#x3C;join&#x3C;number, string&#x3E;, boolean&#x3E;
+      </pre>
+      <p>
+        There is one more type operator in TypeScript: &. This operator merges two objects together to an
+        object
+        type which has the key-value pairs of both objects. While it is possible to use this operator on
+        primitive types in TypeScript, it is a bit weird and most of the time not what you want. So for
+        the
+        monoid definition I have restricted it to objects:
+      </p>
+      type join&#x3C;a extends object, b extends object&#x3E; = a &#x26; b
+      type id = Unit
+
+      type x = join&#x3C;{ x: number }, { y: number }&#x3E;
+      </pre>
+      <p>
+        When combining three objects together the order doesn’t matter, showing the associativity of
+        this
+        operator. Both examples below result into the same 3d vector type.
+      </p>
+      <pre>
+        type u =
+        join&#x3C;{ x: number }, join&#x3C;{ y: number }, { z: number }&#x3E;&#x3E;
+        type u =
+        join&#x3C;join&#x3C;{ x: number }, { y: number }&#x3E;, { z: number }&#x3E;
+      </pre>
+      <p>
+        To really understand this operator is it good to compare it with the product type of two
+        objects. If you fade-out the additional parentheses the product has you do end up with
+        almost
+        the same as a single object that has both sets of key-value pairs. The & operator is very
+        close
+        to a product, with the main difference being that is represents the common JavaScript
+        pattern of
+        merging two objects into one object instead of creating a tuple with two objects.
+      </p>
+      <pre>
+        [ { x: number }, { y: number } ]
+        { x: number } & { y: number }
+
+        [ { x: number }, { y: number } ]
+        { x: number } & { y: number }
+      </pre>
+      <p>
+        There is a bit of a gotcha with this operator that makes it a bit less perfect as a
+        monoid. If
+        you have two objects that have the same key it will not be the same as the product type.
+        If you
+        try to merge two properties with the same key and different types you end up with never.
+        If they
+        have the same type you will end up with that type. This means that the & is not always the
+        perfect multiplication of possible instances of two types like the product type always is.
+      </p>
+
+    </main>
+  </div>
+
+</body>
+
+</html>
