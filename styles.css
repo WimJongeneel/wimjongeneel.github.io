@@ -31,6 +31,11 @@ aside * {
   font-family: 'Crimson Pro', serif;
 }
 
+aside a {
+  color: white;
+  text-decoration: none;
+}
+
 .contents {
   margin-top: 50px;
 }
@@ -92,10 +97,15 @@ aside {
   display: none;
 }
 
+.aside-inner {
+  position: fixed;
+  min-height: 100vh;
+}
+
 .page {
-  width: 96%;
-  margin-left: 2%;
-  margin-right: 2%;
+  width: 94%;
+  margin-left: 3%;
+  margin-right: 3%;
 }
 
 @media screen and (min-width: 768px) {
@@ -114,83 +124,51 @@ aside {
     display: flex;
     justify-content: space-between;
   }
+
   aside {
     display: block;
-    background-color: #000985;
     color: white;
     width: 30%;
     min-height: 100vh;
-    padding: 10px;
   }
+
   main {
     margin-left: 5%;
     width: 63%;
     margin-right: 2%;
   }
+
+  .aside-inner {
+    background-color: #000985;
+    width: calc(30vw - 20px);
+    padding: 10px;
+    top: 0;
+    margin: 0;
+  }
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 1367px) {
   .page {
     width: 70%;
-    margin-left: 10%;
-    margin-right: 15%;
+    margin-left: 5%;
+    margin-right: 20%;
+  }
+
+  .aside-inner {
+    width: calc(70vw * .3 - 20px);
+    left: calc(5vw + 10px);
   }
 }
 
 @media screen and (min-width: 1600px) {
   .page {
     width: 60%;
-    margin-left: 15%;
-    margin-right: 25%;
+    margin-left: 10%;
+    margin-right: 30%;
+  }
+
+  .aside-inner {
+    width: calc(60vw * .3 - 20px);
+    left: calc(10vw + 10px);
   }
 }
-
-/*
-
-  aside {
-    background-color: #000985;
-    color: white;
-    width: 30%;
-    min-height: 100vh;
-    padding: 10px;
-  }
-  main {
-    width: 65%;
-    min-height: 100vh;
-    padding: 10px;
-  }
-  @media screen and (max-width: 786px) {
-    .page {
-      width: 100%;
-      margin-left: 0;
-      margin-right: 0;
-    }
-  }
-  @media screen and (max-width: 1600px) {
-    .page {
-      width: 70%;
-      margin-left: 10%;
-      margin-right: 15%;
-    }
-  }
-  @media screen and (max-width: 1200px) {
-    .page {
-      width: 100%;
-      margin-left: 0;
-      margin-right: 0;
-    }
-  }
-  @media screen and (max-width: 960px) {
-    .page {
-      width: 80%;
-      margin-left: 10%;
-      margin-right: 10%;
-    }
-    aside {
-      display: none;
-      width: 0;
-    }
-    main {
-      width: 100%;
-    }
-  }
